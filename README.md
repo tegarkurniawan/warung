@@ -565,80 +565,89 @@ class UserController extends Controller
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
-class UserController extends Controller
+class KategoriController extends Controller
 {
     public function index()
     {
-        $users = User::all();
-        return view('users.index', compact('users'));
+        $kategoris = Kategori::all();
+        return view('kategoris.index', compact('kategoris'));
     }
 
     public function create()
     {
-        return view('users.create');
+        return view('kategoris.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,kasir',
+            'nama' => 'required|string|max:255',
+            'gambar' => 'nullable|image|max:2048',
         ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
+        $data = [
+            'nama' => $request->nama,
+        ];
 
-        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan');
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('kategoris', $filename,'public');
+            $data['gambar'] = $filename;
+        }
+
+        Kategori::create($data);
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil ditambahkan');
     }
 
-    public function edit(User $user)
+    public function edit(Kategori $kategori)
     {
-        return view('users.edit', compact('user'));
+        return view('kategoris.edit', compact('kategori'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, Kategori $kategori)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,kasir',
+            'nama' => 'required|string|max:255',
+            'gambar' => 'nullable|image|max:2048',
         ]);
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-        ]);
+        $data = [
+            'nama' => $request->nama,
+        ];
 
-        if ($request->filled('password')) {
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
+        if ($request->hasFile('gambar')) {
+            // Delete old image
+            if ($kategori->gambar) {
+                Storage::delete('public/kategoris/' . $kategori->gambar);
+            }
+
+            $file = $request->file('gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('kategoris', $filename, 'public');
+            $data['gambar'] = $filename;
         }
 
-        return redirect()->route('users.index')->with('success', 'User berhasil diupdate');
+        $kategori->update($data);
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil diupdate');
     }
 
-    public function destroy(User $user)
+    public function destroy(Kategori $kategori)
     {
-        // Prevent deleting own account
-        if ($user->id === auth()->id()) {
-            return redirect()->route('users.index')->with('error', 'Tidak dapat menghapus akun sendiri');
+        // Delete image if exists
+        if ($kategori->gambar) {
+            Storage::delete('public/kategoris/' . $kategori->gambar);
         }
 
-        $user->delete();
+        $kategori->delete();
 
-        return redirect()->route('users.index')->with('success', 'User berhasil dihapus');
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil dihapus');
     }
 }
 ```
