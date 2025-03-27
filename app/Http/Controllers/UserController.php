@@ -8,9 +8,26 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $query = User::query();
+
+        // Pencarian berdasarkan nama atau email user
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('email', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        $users = $query->orderBy('name')->paginate(10);
+        
+        // Mempertahankan parameter pencarian pada pagination links
+        if ($request->has('search')) {
+            $users->appends(['search' => $request->search]);
+        }
+        
         return view('users.index', compact('users'));
     }
 

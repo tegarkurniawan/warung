@@ -1,89 +1,128 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Produk')
+
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">Edit Produk</h1>
-
-    @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <form action="{{ route('produk.update', $produk->id) }}" method="POST" enctype="multipart/form-data" class="max-w-lg">
-        @csrf
-        @method('PUT')
-
-        <div class="mb-4">
-            <label for="nama" class="block text-gray-700 text-sm font-bold mb-2">Nama Produk</label>
-            <input type="text" name="nama" id="nama"
-                   value="{{ old('nama', $produk->nama) }}"
-                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                   @error('nama') border-red-500 @enderror">
-            @error('nama')
-                <p class="text-red-500 text-xs italic">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="harga" class="block text-gray-700 text-sm font-bold mb-2">Harga</label>
-            <input type="number" name="harga" id="harga"
-                   value="{{ old('harga', $produk->harga) }}"
-                   min="0" step="0.01"
-                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                   @error('harga') border-red-500 @enderror">
-            @error('harga')
-                <p class="text-red-500 text-xs italic">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="gambar" class="block text-gray-700 text-sm font-bold mb-2">Gambar Produk</label>
-            <input type="file" name="gambar" id="gambar"
-                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                   @error('gambar') border-red-500 @enderror">
-            @error('gambar')
-                <p class="text-red-500 text-xs italic">{{ $message }}</p>
-            @enderror
-
-            @if($produk->gambar)
-                <div class="mt-2">
-                    <p class="text-sm text-gray-600">Gambar Saat Ini:</p>
-                    <img src="{{ asset('storage/produks/' . $produk->gambar) }}"
-                         alt="{{ $produk->nama }}"
-                         class="mt-2 h-32 w-auto object-cover">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Edit Produk</h3>
                 </div>
-            @endif
+                <div class="card-body">
+                    <form action="{{ route('produk.update', $produk->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nama Produk</label>
+                                    <input type="text" class="form-control @error('nama') is-invalid @enderror" name="nama" value="{{ old('nama', $produk->nama) }}" required>
+                                    @error('nama')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Harga</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="number" class="form-control @error('harga') is-invalid @enderror" name="harga" value="{{ old('harga', $produk->harga) }}" required>
+                                    </div>
+                                    @error('harga')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Stok</label>
+                                    <input type="number" class="form-control @error('stok') is-invalid @enderror" name="stok" value="{{ old('stok', $produk->stok) }}" required>
+                                    @error('stok')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Gambar Produk</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="{{ asset('storage/produks/' . $produk->gambar) }}" 
+                                             alt="{{ $produk->nama }}" 
+                                             class="img-thumbnail"
+                                             style="width: 100px; height: 100px; object-fit: cover;">
+                                        <input type="file" class="form-control @error('gambar') is-invalid @enderror" name="gambar" accept="image/*">
+                                    </div>
+                                    @error('gambar')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Format: JPG, JPEG, PNG. Maksimal 2MB. Kosongkan jika tidak ingin mengubah gambar.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Kategori</label>
+                                    <select class="form-select select2 @error('kategori_ids') is-invalid @enderror" name="kategori_ids[]" multiple required>
+                                        @foreach($kategoris as $kategori)
+                                            <option value="{{ $kategori->id }}" {{ in_array($kategori->id, old('kategori_ids', $produk->kategoris->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                                {{ $kategori->nama }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('kategori_ids')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Deskripsi</label>
+                                    <textarea class="form-control @error('deskripsi') is-invalid @enderror" name="deskripsi" rows="3">{{ old('deskripsi', $produk->deskripsi) }}</textarea>
+                                    @error('deskripsi')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                        Update
+                                    </button>
+                                    <a href="{{ route('produk.index') }}" class="btn btn-secondary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 11l-4 4l4 4m-4 -4h11a4 4 0 0 0 0 -8h-1" /></svg>
+                                        Kembali
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label for="kategori_ids" class="block text-gray-700 text-sm font-bold mb-2">Kategori (Multiple)</label>
-            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                   @error('kategori_ids') border-red-500 @enderror"
-                    id="kategori_ids"
-                    name="kategori_ids[]"
-                    multiple
-                    required>
-                @foreach($kategoris as $kategori)
-                    <option value="{{ $kategori->id }}"
-                            {{ in_array($kategori->id, old('kategori_ids', $selectedKategoris)) ? 'selected' : '' }}>
-                        {{ $kategori->nama }}
-                    </option>
-                @endforeach
-            </select>
-            @error('kategori_ids')
-                <p class="text-red-500 text-xs italic">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div class="flex items-center justify-between">
-            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Update Produk
-            </button>
-            <a href="{{ route('produk.index') }}" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
-                Kembali
-            </a>
-        </div>
-    </form>
+    </div>
 </div>
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Pilih kategori',
+            allowClear: true
+        });
+    });
+</script>
+@endpush
 @endsection

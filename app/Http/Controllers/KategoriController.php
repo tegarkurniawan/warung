@@ -8,9 +8,23 @@ use Illuminate\Support\Facades\Storage;
 
 class KategoriController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $kategoris = Kategori::all();
+        $query = Kategori::query();
+
+        // Pencarian berdasarkan nama kategori
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where('nama', 'like', "%{$searchTerm}%");
+        }
+
+        $kategoris = $query->orderBy('nama')->paginate(10);
+        
+        // Mempertahankan parameter pencarian pada pagination links
+        if ($request->has('search')) {
+            $kategoris->appends(['search' => $request->search]);
+        }
+        
         return view('kategoris.index', compact('kategoris'));
     }
 

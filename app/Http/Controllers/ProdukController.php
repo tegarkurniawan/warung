@@ -10,9 +10,23 @@ use Illuminate\Support\Facades\DB;
 
 class ProdukController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $produks = Produk::with('kategoris')->get();
+        $query = Produk::with('kategoris');
+
+        // Pencarian berdasarkan nama produk
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where('nama', 'like', "%{$searchTerm}%");
+        }
+
+        $produks = $query->orderBy('nama')->paginate(10);
+        
+        // Mempertahankan parameter pencarian pada pagination links
+        if ($request->has('search')) {
+            $produks->appends(['search' => $request->search]);
+        }
+        
         return view('produks.index', compact('produks'));
     }
 
@@ -27,6 +41,7 @@ class ProdukController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
             'gambar' => 'nullable|image|max:2048',
             'kategori_ids' => 'required|array',
             'kategori_ids.*' => 'exists:kategoris,id',
@@ -38,6 +53,7 @@ class ProdukController extends Controller
             $data = [
                 'nama' => $request->nama,
                 'harga' => $request->harga,
+                'stok' => $request->stok,
             ];
 
             if ($request->hasFile('gambar')) {
@@ -74,6 +90,7 @@ class ProdukController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
             'gambar' => 'nullable|image|max:2048',
             'kategori_ids' => 'required|array',
             'kategori_ids.*' => 'exists:kategoris,id',
@@ -85,6 +102,7 @@ class ProdukController extends Controller
             $data = [
                 'nama' => $request->nama,
                 'harga' => $request->harga,
+                'stok' => $request->stok,
             ];
 
             if ($request->hasFile('gambar')) {

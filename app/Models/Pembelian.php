@@ -9,7 +9,7 @@ class Pembelian extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nama_pembeli', 'total_harga', 'metode_pembayaran', 'status_pembayaran'];
+    protected $fillable = ['nama_pembeli', 'total_harga', 'metode_pembayaran', 'status_pembayaran','created_by'];
 
     public function detail()
     {
